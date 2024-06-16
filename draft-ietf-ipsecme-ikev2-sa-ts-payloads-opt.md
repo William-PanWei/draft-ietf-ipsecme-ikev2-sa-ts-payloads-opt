@@ -91,7 +91,7 @@ Large scale IKEv2 gateways such as Evolved Packet Data Gateway (ePDG) in 4G netw
 
 For Internet of Things (IoT) devices which utilize low power consumption technology, reducing the size of the CREATE_CHILD_SA exchange for rekeying reduces its power consumption, as sending bytes over the air is usually the most power consuming operation of such a device. Reducing the CPU operations required to verify the rekey exchanges parameters will also save power and extend the lifetime for these devices.
 
-When using identical parameters for the IKE SA or Child SA rekey, the SA and TS payloads can be omitted thanks to the optimization defined in this document. For an IKE SA rekey, instead of the (large) SA payload, only a Key Exchange (KE) payload and a new Notify Type payload with the new SPI are required. For a Child SA payload, instead of the SA or TS payloads, only an optional nonce payload (when using PFS) and a new Notify Type payload with the new SPI are needed. This makes the rekey exchange packets much smaller and the peers do not need to verify that the SA or TS parameters are compatible with the old SA parameters.
+When using identical parameters for the IKE SA or Child SA rekey, the SA and TS payloads can be omitted thanks to the optimization defined in this document. For an IKE SA rekey, instead of the (large) SA payload, only a Key Exchange (KE) payload and a new Notify Type payload with the new SPI are required. For a Child SA payload, instead of the SA or TS payloads, only an optional KE payload (when using PFS) and a new Notify Type payload with the new SPI are needed. This makes the rekey exchange packets much smaller and the peers do not need to verify that the SA or TS parameters are compatible with the old SA parameters.
 
 
 
@@ -103,7 +103,7 @@ When using identical parameters for the IKE SA or Child SA rekey, the SA and TS 
 
 # Negotiation of Support for OPTIMIZED REKEY
 
-To indicate support for the optimized rekey negotiation, the initiator includes the OPTIMIZED_REKEY_SUPPORTED notify payload in the IKE_AUTH exchange request. If multiple IKE_AUTH exchanges are sent, the OPTIMIZED_REKEY_SUPPORTED notify payload should be in the last IKE_AUTH exchange, which is the exchange that also contains the TS payloads. During this initial key request, the entire SA and TS payloads are included as normal. Note that the notify indicates support for optimized rekey for both IKE and Child SAs.
+To indicate support for the optimized rekey negotiation, the initiator includes the OPTIMIZED_REKEY_SUPPORTED notify payload in the IKE_AUTH exchange request. If multiple IKE_AUTH exchanges are sent, the OPTIMIZED_REKEY_SUPPORTED notify payload should be in the last IKE_AUTH exchange. During this initial key request, the entire SA and TS payloads are included as normal. Note that the notify indicates support for optimized rekey for both IKE and Child SAs.
 
 A responder that does not support the optimized rekey exchange processes the SA and TS payloads as normal, and does not include the new Notify. As per regular IKEv2 processing, a responder that does not recognize this new Notify, MUST ignore the notify. Responders may have been administratively configured with the optimization turned off for local reasons. The absense of the Notify indicates to the initiator that the optimization is not available, and normal, full rekey should be done.
 
@@ -124,7 +124,7 @@ HDR, SK {IDi, [CERT,] [CERTREQ,]
 
 # Optimized Rekey of the IKE SA
 
-The initiator of an optimized rekey request sends a CREATE_CHILD_SA payload with the OPTIMIZED_REKEY notify payload containing the new Security Parameter Index (SPI) for the new IKE SA. It omits the SA payload.
+The initiator of an optimized rekey request sends a CREATE_CHILD_SA request with the OPTIMIZED_REKEY notify payload containing the new Security Parameter Index (SPI) for the new IKE SA. It omits the SA payload.
 
 The responder of an optimized rekey request replies with an included OPTIMIZED_REKEY notify with its new IKE SPI and also omits the SA payload.
 
@@ -145,9 +145,9 @@ HDR, SK {N(OPTIMIZED_REKEY,newSPIi),
 
 # Optimized Rekey of Child SAs
 
-The initiator of an optimized rekey request sends a CREATE_CHILD_SA payload with the OPTIMIZED_REKEY notify payload containing the new Security Parameter Index (SPI) for the new Child SA. It omits the SA and TS payloads. If the current Child SA was negotiated with Perfect Forward Secrecy (PFS), a KEi payload MUST be included as well. If no PFS was negotiated for the current Child SA, a KEi payload MUST NOT be included.
+The initiator of an optimized rekey request sends a CREATE_CHILD_SA request with the OPTIMIZED_REKEY notify payload containing the new Security Parameter Index (SPI) for the new Child SA. It omits the SA and TS payloads. If the current Child SA was negotiated with Perfect Forward Secrecy (PFS), a KEi payload MUST be included as well. If no PFS was negotiated for the current Child SA, a KEi payload MUST NOT be included.
 
-The responder of an optimized rekey request performs the same process. It includes the OPTIMIZED_REKEY notify with its new IKE SPI and omits the SA and TS payloads. Depending on the PFS negotiation of the current Child SA, the responder includes a KEr payload.
+The responder of an optimized rekey request performs the same process. It includes the OPTIMIZED_REKEY notify with its new SPI for the new Child SA and omits the SA and TS payloads. Depending on the PFS negotiation of the current Child SA, the responder MUST include a KEr payload.
 
 Both parties send their nonce payloads just as they would do for a regular Child SA rekey.
 
@@ -190,8 +190,6 @@ The OPTIMIZED_REKEY_SUPPORTED Notify Message type notification is used by the in
 
 This Notify Message type contains no data.
 
-The Critical bit MUST be 0. A non-zero value MUST be ignored.
-
 ## OPTIMIZED\_REKEY Notify
 
 The OPTIMIZED_REKEY Notify Message type is used to perform an optimized IKE SA or Child SA rekey.
@@ -202,22 +200,21 @@ The OPTIMIZED_REKEY Notify Message type is used to perform an optimized IKE SA o
 +---------------+-+-------------+-------------------------------+
 | Next Payload  |C|  RESERVED   |         Payload Length        |
 +---------------+-+-------------+-------------------------------+
-|Protocol ID    | SPI Size (=8) |      Notify Message Type      |
+|Protocol ID(=0)| SPI Size (=0) |      Notify Message Type      |
 +---------------+---------------+-------------------------------+
-|                Security Parameter Index (SPI)                 |
+|                                                               |
+~                            New SPI                            ~
 |                                                               |
 +---------------------------------------------------------------+
 ~~~~
 
-* Protocol ID (1 octet) - For an IKE SA rekey, this field MUST contain (1). For Child SAs, this field MUST contain either (2) to indicate AH or (3) to indicate ESP.
+* Protocol ID (1 octet) - MUST be 0.
 
-* SPI Size (1 octet) - MUST be 8 when rekeying an IKE SA. MUST be 4 when rekeying a Child SA.
+* SPI Size (1 octet) - MUST be 0, meaning no SPI is present.
 
 * Notify Message Type (2 octets) - MUST be set to the value `TBD2`.
 
-* SPI (4 octets or 8 octets) - Security Parameter Index. The new SPI.
-
-The Critical bit MUST be 1. A value of 0 MUST be ignored.
+The 'New SPI' field is the data associated with this Notify, and it's either a four-octet SPI when rekeying an IKE SA or an eight-octet SPI when rekeying a Child SA.
 
 # IANA Considerations
 
