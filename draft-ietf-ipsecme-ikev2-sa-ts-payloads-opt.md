@@ -145,9 +145,9 @@ HDR, SK {N(OPTIMIZED_REKEY,newSPIi),
 
 # Optimized Rekey of Child SAs
 
-The initiator of an optimized rekey request sends a CREATE_CHILD_SA request with the OPTIMIZED_REKEY notify payload containing the new Security Parameter Index (SPI) for the new Child SA. It omits the SA and TS payloads. If the current Child SA was negotiated with Perfect Forward Secrecy (PFS), a KEi payload MUST be included as well. If no PFS was negotiated for the current Child SA, a KEi payload MUST NOT be included.
+The initiator of an optimized rekey request sends a CREATE_CHILD_SA request with the OPTIMIZED_REKEY notify payload containing the new Security Parameter Index (SPI) for the new Child SA. It omits the SA and TS payloads. If the current Child SA was negotiated with Perfect Forward Secrecy (PFS), a KEi payload is included as well. If no PFS was negotiated for the current Child SA, a KEi payload is not included.
 
-The responder of an optimized rekey request performs the same process. It includes the OPTIMIZED_REKEY notify with its new SPI for the new Child SA and omits the SA and TS payloads. Depending on the PFS negotiation of the current Child SA, the responder MUST include a KEr payload.
+The responder of an optimized rekey request performs the same process. It includes the OPTIMIZED_REKEY notify with its new SPI for the new Child SA and omits the SA and TS payloads. Depending on the PFS negotiation of the current Child SA, the responder includes a KEr payload.
 
 Both parties send their nonce payloads just as they would do for a regular Child SA rekey.
 
@@ -210,7 +210,7 @@ The OPTIMIZED_REKEY Notify Message type is used to perform an optimized IKE SA o
 
 * Protocol ID (1 octet) - MUST be 0.
 
-* SPI Size (1 octet) - MUST be 0, meaning no SPI is present.
+* SPI Size (1 octet) - MUST be 0. The "Security Parameter Index (SPI)" field is not used in this Notify, and the new SPI is placed in the "Notification Data" field.
 
 * Notify Message Type (2 octets) - MUST be set to the value `TBD2`.
 
