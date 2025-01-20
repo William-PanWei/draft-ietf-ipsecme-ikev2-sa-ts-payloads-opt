@@ -1,6 +1,6 @@
-title: IKEv2 Optional SA&TS Payloads in Child Exchange
-abbrev: IKEv2 Optional Child SA&TS Payloads
-docname: draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-03
+title: Optimizing the Redundant Payloads when Rekeying the IKE and Child SAs in the IKEv2
+abbrev: Optimized Rekey of IKE & Child SAs
+docname: draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-04
 category: std
 
 ipr: trust200902
@@ -57,6 +57,16 @@ author:
   code: "100053"
   city: Beijing
   country: China
+- ins: V. Smyslov
+  name: Valery Smyslov
+  org: ELVIS-PLUS
+  abbrev: ELVIS-PLUS
+  phone: "+7 495 276 0211"
+  email: svan@elvis.ru
+  street: PO Box 81
+  code: "124460"
+  city: Moscow (Zelenograd)
+  country: Russian Federation
 
 normative:
   RFC2119:
@@ -64,6 +74,9 @@ normative:
   RFC7296:
 
 informative:
+  RFC5857:
+  RFC9347:
+  I-D.pwouters-ipsecme-child-pfs-info: child-pfs
 
 venue:
   mail: ipsec@ietf.org
@@ -79,11 +92,11 @@ Reducing size and complexity of IKEv2 exchanges is especially useful for low pow
 
 The Internet Key Exchange protocol version 2 (IKEv2) [RFC7296] is used to negotiate Security Association (SA) parameters for the IKE SA and the Child SAs. Cryptographic key material for these SAs have a limited lifetime before it needs to be refreshed, a process referred to as "rekeying". IKEv2 uses the CREATE_CHILD_SA exchange to rekey either the IKE SA or the Child SAs.
 
-When rekeying, a full set of negotiation parameters are exchanged. However, most of these parameters will be the same as before, and some of these parameters MUST NOT change.
+When rekeying, a full set of negotiation parameters are exchanged. However, most of these parameters will be the same as before.
 
-For example, the Traffic Selector (TS) negotiated for the new Child SA MUST cover the Traffic Selectors negotiated for the old Child SA. And in practically all cases, a new Child SA does not need to cover a wider set of Traffic. In the rare case where this would be needed, either a standard rekey could be used or a new Child SA could be negotiated followed by a deletion of the replaced Child SA.
+For example, the Traffic Selectors (TS) negotiated for the new Child SA must cover the Traffic Selectors negotiated for the old Child SA. And in practically all cases, a new Child SA does not need to cover a wider set of traffic. In the rare case where this would be needed, either a standard rekey could be used or a new Child SA could be negotiated followed by a deletion of the replaced Child SA. Further, per RFC 7296, the Traffic Selectors and algorithms should not change when rekeying the Child SA.
 
-Similarly, IKEv2 states that the cryptographic parameters negotiated for rekeying SHOULD NOT be different. This means that the security properties of the IKE or Child SA in practise do not change during a typical rekey.
+Similarly, IKEv2 states that the cryptographic parameters negotiated for rekeying should not be different. This means that the security properties of the IKE or Child SA in practice do not change during a typical rekey.
 
 This document specifies a method to omit these parameters and replace them with a single Notify Message declaring that all these parameters are identical to the originally negotiated parameters.
 
@@ -91,9 +104,7 @@ Large scale IKEv2 gateways such as Evolved Packet Data Gateway (ePDG) in 4G netw
 
 For Internet of Things (IoT) devices which utilize low power consumption technology, reducing the size of the CREATE_CHILD_SA exchange for rekeying reduces its power consumption, as sending bytes over the air is usually the most power consuming operation of such a device. Reducing the CPU operations required to verify the rekey exchanges parameters will also save power and extend the lifetime for these devices.
 
-When using identical parameters for the IKE SA or Child SA rekey, the SA and TS payloads can be omitted thanks to the optimization defined in this document. For an IKE SA rekey, instead of the (large) SA payload, only a Key Exchange (KE) payload and a new Notify Type payload with the new SPI are required. For a Child SA payload, instead of the SA or TS payloads, only an optional KE payload (when using PFS) and a new Notify Type payload with the new SPI are needed. This makes the rekey exchange packets much smaller and the peers do not need to verify that the SA or TS parameters are compatible with the old SA parameters.
-
-
+When using identical parameters for the IKE SA or Child SA rekey, the SA and TS payloads can be omitted thanks to the optimization defined in this document. For an IKE SA rekey, instead of the (large) SA payload, only a Key Exchange (KE) payload, a Nonce payload, and a new Notify Type payload with the new SPI are required. For a Child SA rekey, instead of the SA or TS payloads, only an optional KE payload (when using PFS), a Nonce payload, and a new Notify Type payload with the new SPI are needed. This makes the rekey exchange packets much smaller and the peers do not need to verify that the SA or TS parameters are compatible with the old SA parameters.
 
 # Conventions Used in This Document
 
@@ -101,13 +112,14 @@ When using identical parameters for the IKE SA or Child SA rekey, the SA and TS 
 
 {::boilerplate bcp14-tagged}
 
-# Negotiation of Support for OPTIMIZED REKEY
+# Negotiation of Support for Optimized Rekey
 
-To indicate support for the optimized rekey negotiation, the initiator includes the OPTIMIZED_REKEY_SUPPORTED notify payload in the IKE_AUTH exchange request. If multiple IKE_AUTH exchanges are sent, the OPTIMIZED_REKEY_SUPPORTED notify payload should be in the last IKE_AUTH exchange. During this initial key request, the entire SA and TS payloads are included as normal. Note that the notify indicates support for optimized rekey for both IKE and Child SAs.
+To indicate support for the optimized rekey negotiation, the initiator includes the OPTIMIZED_REKEY_SUPPORTED notify payload in the IKE_AUTH exchange request.
+If the responder supports this optimized rekey and is configured to use it, then it includes the OPTIMIZED_REKEY_SUPPORTED in the IKE_AUTH response message.
+If multiple IKE_AUTH exchanges are sent, the OPTIMIZED_REKEY_SUPPORTED notify payload should be in the last IKE_AUTH exchange.
+During the IKE_AUTH exchanges, the entire SA and TS payloads are included as normal. Note that the notify indicates support for optimized rekey for both IKE and Child SAs.
 
-A responder that does not support the optimized rekey exchange processes the SA and TS payloads as normal, and does not include the new Notify. As per regular IKEv2 processing, a responder that does not recognize this new Notify, MUST ignore the notify. Responders may have been administratively configured with the optimization turned off for local reasons. The absense of the Notify indicates to the initiator that the optimization is not available, and normal, full rekey should be done.
-
-When a peer wishes to rekey an IKE SA or Child SA, it MAY use the optimized rekey method during the CREATE_CHILD_SA exchange. If both peers have exchanged OPTIMIZED_REKEY_SUPPORTED notifies, peers SHOULD use the optimized rekey method for rekeys. Non-optimized, regular rekey requests MUST always be accepted.
+A responder that does not support the optimized rekey exchange processes the SA and TS payloads as normal, and does not include the new Notify. As per regular IKEv2 processing, a responder that does not recognize this new Notify, will ignore it. Responders may have been administratively configured with the optimization turned off for local reasons. The absence of the Notify indicates to the initiator that the optimization is not available, and regular rekey should be used.
 
 The IKE_AUTH message exchange in this case is shown below:
 
@@ -122,7 +134,15 @@ HDR, SK {IDi, [CERT,] [CERTREQ,]
                                     N(OPTIMIZED_REKEY_SUPPORTED)}
 ~~~~
 
-# Optimized Rekey of the IKE SA
+If both peers have exchanged OPTIMIZED_REKEY_SUPPORTED notifies, peers SHOULD use the optimized rekey method for rekeys.
+Non-optimized, regular rekey requests MUST always be accepted.
+
+Note that the optimized rekey MUST inherit all the properties (except the key) of the SA being rekeyed.
+This means the configurations related to the SA being rekeyed are supposed to have no changes.
+If there is a change to the configurations, the regular rekey MUST be used instead.
+After the regular rekey, the next rekey can use the optimized way if there is no change to the configuration.
+
+# Optimized Rekey of IKE SA
 
 The initiator of an optimized rekey request sends a CREATE_CHILD_SA request with the OPTIMIZED_REKEY notify payload containing the new Security Parameter Index (SPI) for the new IKE SA. It omits the SA payload.
 
@@ -143,19 +163,22 @@ HDR, SK {N(OPTIMIZED_REKEY,newSPIi),
                                          Nr, KEr}
 ~~~~
 
+If the responder fails in processing the optimized rekey request, it replies with the corresponding error message to the initiator. After receiving the error response, the initiator SHOULD retry a regular rekey.
+
 # Optimized Rekey of Child SAs
 
-The initiator of an optimized rekey request sends a CREATE_CHILD_SA request with the OPTIMIZED_REKEY notify payload containing the new Security Parameter Index (SPI) for the new Child SA. It omits the SA and TS payloads. If the current Child SA was negotiated with Perfect Forward Secrecy (PFS), a KEi payload is included as well. If no PFS was negotiated for the current Child SA, a KEi payload is not included.
+The initiator of an optimized rekey request sends a CREATE_CHILD_SA request with the OPTIMIZED_REKEY notify payload containing the new Security Parameter Index (SPI) for the new Child SA. It omits the SA and TS payloads. If the Child SA being rekeyed was negotiated with Perfect Forward Secrecy (PFS), a KEi payload is included as well. If no PFS was negotiated for the Child SA being rekeyed, a KEi payload is not included.
 
-The responder of an optimized rekey request performs the same process. It includes the OPTIMIZED_REKEY notify with its new SPI for the new Child SA and omits the SA and TS payloads. Depending on the PFS negotiation of the current Child SA, the responder includes a KEr payload.
+The responder of an optimized rekey request performs the same process. It includes the OPTIMIZED_REKEY notify with its new SPI for the new Child SA and omits the SA and TS payloads. Depending on the PFS negotiation of the Child SA being rekeyed, the responder includes a KEr payload.
 
 Both parties send their nonce payloads just as they would do for a regular Child SA rekey.
 
 Using the old SPI from the REKEY_SA payload and the two new SPIs respectively from the initiator and responder's OPTIMIZED_REKEY payloads, both parties can perform the Child SA rekey operation.
 
-Notify payloads that can affect the Child SA properties, such as USE_TRANSPORT_MODE or ESP_TFC_PADDING_NOT_SUPPORTED MAY be sent but MUST be ignored and MUST NOT cause the Child SA properties to change. IPCOMP_SUPPORTED MUST be sent as it contains the required updated CPI parameter.
-
-For the Child SA that was negotiated as part of an initial IKE exchange (eg IKE_AUTH), its rekey parameters for the KE payload SHOULD be the same KE group(s) for Child SA PFS as the negotiated IKE SA. If rekeying without PFS is required, the peer first initiates a regular Child SA rekey without KE payload, and subsequently it can use the optimized rekey method. If a peer responding to an optimized rekey receives a request with a non-allowed PFS proposal, it MUST return an INVALID_KE_PAYLOAD response.
+Notify payloads that can affect the Child SA properties, such as USE_TRANSPORT_MODE, ESP_TFC_PADDING_NOT_SUPPORTED, ROHC_SUPPORTED [RFC5857] or USE_AGGFRAG [RFC9347] MUST NOT be sent.
+The responder MUST fail the rekey and reply error if it receives these notifications in the optimized rekey request.
+All the properties (except the key) of the Child SA being rekeyed MUST be inherited to the one newly created by the optimized rekey.
+If the Child SA being rekeyed was created with IP compression, then IPCOMP_SUPPORTED notifications MUST be sent as they contain the required updated Compression Parameter Indexes (CPIs).
 
 The CREATE_CHILD_SA message exchange in this case is shown below:
 
@@ -167,6 +190,12 @@ HDR, SK {N(REKEY_SA,oldSPI), N(OPTIMIZED_REKEY,newSPIi),
                             <-- HDR, SK {N(OPTIMIZED_REKEY,newSPIr),
                                          Nr, [KEr,]}
 ~~~~
+
+For the Child SA that was negotiated as part of an initial IKE exchange (e.g., IKE_AUTH), its parameters for PFS and the KE method is not known to each other peer at the time of its creation. Two peers MUST have the same configurations for the PFS and KE method. 
+If rekeying without PFS is required, the peer initiates the optimized rekey request without KEi payload. If rekeying with PFS is required and the KE method for the Child SA is the same as the one for IKE SA, the peer initiates the optimized rekey request with a KEi payload. The responder correspondingly include a KEr payload or not in its optimized rekey response.
+If the KE method for the Child SA is different with the one for IKE SA, the peer first initiates a regular Child SA rekey with KE payload, and subsequently it can use the optimized rekey method. If a peer responding to an optimized rekey receives a request with a non-allowed PFS proposal, it MUST return an INVALID_KE_PAYLOAD response.
+
+If the responder fails processing the optimized rekey request, e.g., receiving a request with a non-allowed PFS proposal, it MUST return an error message (What error type?). After receiving the error response of the optimized rekey, the initiator can retry a regular rekey.
 
 # Payload Formats
 
@@ -214,7 +243,7 @@ The OPTIMIZED_REKEY Notify Message type is used to perform an optimized IKE SA o
 
 * Notify Message Type (2 octets) - MUST be set to the value `TBD2`.
 
-The 'New SPI' field is the data associated with this Notify, and it's either a four-octet SPI when rekeying an IKE SA or an eight-octet SPI when rekeying a Child SA.
+The Notification Data for this notify contains new SPI. Its size depends on the type of SA being rekeyed. In case of IKE SA it MUST be 8 octets. In case of Child SA it MUST be equal to the SPI Size field in the REKEY_SA notification that identifies the SA being rekeyed.
 
 # IANA Considerations
 
@@ -229,7 +258,9 @@ OPTIMIZED_REKEY                          TBD2
 
 # Operational Considerations
 
-Some implementations allow sending rekey messages with a different set of Traffic Selectors or cryptographic parameters in response to a configuration update. IKEv2 [RFC7296] states this SHOULD NOT be done. Whether or not optimized rekeying is used, a configuration change that changes the Traffic Selectors or cryptographic parameters MUST NOT use the optimized rekey method. It SHOULD also not use a regular rekey method but instead start an entire new IKE and Child SA negotiation with the new parameters.
+Some implementations allow sending rekey messages with a different set of Traffic Selectors or cryptographic parameters in response to a configuration update. IKEv2 [RFC7296] states this "SHOULD NOT" be done. When there is a configuration change that changes the Traffic Selectors, cryptographic parameters, or other properties of the SA, the optimized rekey method MUST NOT be used.
+
+Two peers' PFS policy and KE method configurations MUST be the same, otherwise, the rekey of the Child SA created in the IKE_AUTH exchange would fail. This issue is also discussed in detail in {{-child-pfs}}. If the KE method for Child SAs is negotiated during the creation of the initial Child SA via the mechanism like {{-child-pfs}}, this KE method MUST be inherited when using the optimized method to rekey the initial Child SA.
 
 # Security Considerations
 
@@ -237,7 +268,7 @@ The optimized rekey removes sending unnecessary new parameters that originally w
 
 # Acknowledgments
 
-Special thanks go to Valery Smyslov and Antony Antony.
+Special thanks go to Antony Antony and Tobias Brunner.
 
 --- back
 
