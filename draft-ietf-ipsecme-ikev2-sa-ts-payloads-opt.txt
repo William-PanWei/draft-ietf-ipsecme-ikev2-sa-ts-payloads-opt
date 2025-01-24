@@ -5,7 +5,7 @@
 IPSECME Working Group                                         S. Kampati
 Internet-Draft                                                 Microsoft
 Intended status: Standards Track                                  W. Pan
-Expires: 24 July 2025                                             Huawei
+Expires: 28 July 2025                                             Huawei
                                                               P. Wouters
                                                                    Aiven
                                                               M. Bharath
@@ -14,11 +14,10 @@ Expires: 24 July 2025                                             Huawei
                                                                     CMCC
                                                               V. Smyslov
                                                               ELVIS-PLUS
-                                                         20 January 2025
+                                                         24 January 2025
 
 
-Optimizing the Redundant Payloads when Rekeying the IKE and Child SAs in
-                               the IKEv2
+Optimized Rekeys in the Internet Key Exchange Protocol Version 2 (IKEv2)
              draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-04
 
 Abstract
@@ -53,7 +52,8 @@ Status of This Memo
 
 
 
-Kampati, et al.           Expires 24 July 2025                  [Page 1]
+
+Kampati, et al.           Expires 28 July 2025                  [Page 1]
 
 Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
@@ -68,7 +68,7 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 24 July 2025.
+   This Internet-Draft will expire on 28 July 2025.
 
 Copyright Notice
 
@@ -94,9 +94,9 @@ Table of Contents
    5.  Optimized Rekey of Child SAs  . . . . . . . . . . . . . . . .   6
    6.  Payload Formats . . . . . . . . . . . . . . . . . . . . . . .   7
      6.1.  OPTIMIZED_REKEY_SUPPORTED Notify  . . . . . . . . . . . .   7
-     6.2.  OPTIMIZED_REKEY Notify  . . . . . . . . . . . . . . . . .   8
+     6.2.  OPTIMIZED_REKEY Notify  . . . . . . . . . . . . . . . . .   7
    7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   8
-   8.  Operational Considerations  . . . . . . . . . . . . . . . . .   9
+   8.  Operational Considerations  . . . . . . . . . . . . . . . . .   8
    9.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
    10. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .   9
    11. References  . . . . . . . . . . . . . . . . . . . . . . . . .   9
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Kampati, et al.           Expires 24 July 2025                  [Page 2]
+Kampati, et al.           Expires 28 July 2025                  [Page 2]
 
 Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
@@ -124,7 +124,9 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
    either the IKE SA or the Child SAs.
 
    When rekeying, a full set of negotiation parameters are exchanged.
-   However, most of these parameters will be the same as before.
+   However, most of these parameters will be the same as before.  This
+   means that the security properties of the IKE or Child SA in practice
+   do not change during a typical rekey.
 
    For example, the Traffic Selectors (TS) negotiated for the new Child
    SA must cover the Traffic Selectors negotiated for the old Child SA.
@@ -134,11 +136,6 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
    negotiated followed by a deletion of the replaced Child SA.  Further,
    per RFC 7296, the Traffic Selectors and algorithms should not change
    when rekeying the Child SA.
-
-   Similarly, IKEv2 states that the cryptographic parameters negotiated
-   for rekeying should not be different.  This means that the security
-   properties of the IKE or Child SA in practice do not change during a
-   typical rekey.
 
    This document specifies a method to omit these parameters and replace
    them with a single Notify Message declaring that all these parameters
@@ -161,25 +158,25 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
    exchanges parameters will also save power and extend the lifetime for
    these devices.
 
-
-
-
-
-Kampati, et al.           Expires 24 July 2025                  [Page 3]
-
-Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
-
-
    When using identical parameters for the IKE SA or Child SA rekey, the
    SA and TS payloads can be omitted thanks to the optimization defined
    in this document.  For an IKE SA rekey, instead of the (large) SA
    payload, only a Key Exchange (KE) payload, a Nonce payload, and a new
-   Notify Type payload with the new SPI are required.  For a Child SA
-   rekey, instead of the SA or TS payloads, only an optional KE payload
-   (when using PFS), a Nonce payload, and a new Notify Type payload with
-   the new SPI are needed.  This makes the rekey exchange packets much
-   smaller and the peers do not need to verify that the SA or TS
-   parameters are compatible with the old SA parameters.
+
+
+
+Kampati, et al.           Expires 28 July 2025                  [Page 3]
+
+Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
+
+
+   Notify Type payload with the new Security Parameter Index (SPI) are
+   required.  For a Child SA rekey, instead of the SA or TS payloads,
+   only an optional KE payload (when using PFS), a Nonce payload, and a
+   new Notify Type payload with the new SPI are needed.  This makes the
+   rekey exchange packets much smaller and the peers do not need to
+   verify that the SA or TS parameters are compatible with the old SA
+   parameters.
 
 2.  Conventions Used in This Document
 
@@ -199,10 +196,10 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
    optimized rekey and is configured to use it, then it includes the
    OPTIMIZED_REKEY_SUPPORTED in the IKE_AUTH response message.  If
    multiple IKE_AUTH exchanges are sent, the OPTIMIZED_REKEY_SUPPORTED
-   notify payload should be in the last IKE_AUTH exchange.  During the
-   IKE_AUTH exchanges, the entire SA and TS payloads are included as
-   normal.  Note that the notify indicates support for optimized rekey
-   for both IKE and Child SAs.
+   notify payload should be in the first IKE_AUTH request and the last
+   IKE_AUTH response.  During the IKE_AUTH exchanges, the entire SA and
+   TS payloads are included as normal.  Note that the notify indicates
+   support for optimized rekey for both IKE and Child SAs.
 
    A responder that does not support the optimized rekey exchange
    processes the SA and TS payloads as normal, and does not include the
@@ -221,7 +218,10 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
 
 
-Kampati, et al.           Expires 24 July 2025                  [Page 4]
+
+
+
+Kampati, et al.           Expires 28 July 2025                  [Page 4]
 
 Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
@@ -237,21 +237,22 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
    If both peers have exchanged OPTIMIZED_REKEY_SUPPORTED notifies,
    peers SHOULD use the optimized rekey method for rekeys.  Non-
-   optimized, regular rekey requests MUST always be accepted.
+   optimized, regular rekey requests MUST always be accepted.  The
+   regular rekey can be retried when the optimized rekey fails.
 
-   Note that the optimized rekey MUST inherit all the properties (except
-   the key) of the SA being rekeyed.  This means the configurations
-   related to the SA being rekeyed are supposed to have no changes.  If
-   there is a change to the configurations, the regular rekey MUST be
-   used instead.  After the regular rekey, the next rekey can use the
-   optimized way if there is no change to the configuration.
+   Note that, except for the key and identification information such as
+   the SPI, the optimized rekey MUST inherit all other properties of the
+   SA being rekeyed.  This means the configurations related to the SA
+   being rekeyed are supposed to have no changes.  If there is a change
+   to the configurations, the regular rekey MUST be used instead.  After
+   the regular rekey, the next rekey can use the optimized way if there
+   is no change to the configuration.
 
 4.  Optimized Rekey of IKE SA
 
    The initiator of an optimized rekey request sends a CREATE_CHILD_SA
    request with the OPTIMIZED_REKEY notify payload containing the new
-   Security Parameter Index (SPI) for the new IKE SA.  It omits the SA
-   payload.
+   SPI for the new IKE SA.  It omits the SA payload.
 
    The responder of an optimized rekey request replies with an included
    OPTIMIZED_REKEY notify with its new IKE SPI and also omits the SA
@@ -276,32 +277,29 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
 
 
-
-Kampati, et al.           Expires 24 July 2025                  [Page 5]
+Kampati, et al.           Expires 28 July 2025                  [Page 5]
 
 Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
-
-   If the responder fails in processing the optimized rekey request, it
-   replies with the corresponding error message to the initiator.  After
-   receiving the error response, the initiator SHOULD retry a regular
-   rekey.
 
 5.  Optimized Rekey of Child SAs
 
    The initiator of an optimized rekey request sends a CREATE_CHILD_SA
    request with the OPTIMIZED_REKEY notify payload containing the new
-   Security Parameter Index (SPI) for the new Child SA.  It omits the SA
-   and TS payloads.  If the Child SA being rekeyed was negotiated with
-   Perfect Forward Secrecy (PFS), a KEi payload is included as well.  If
-   no PFS was negotiated for the Child SA being rekeyed, a KEi payload
-   is not included.
+   SPI for the new Child SA.  It omits the SA and TS payloads.  If the
+   Child SA being rekeyed was negotiated with Perfect Forward Secrecy
+   (PFS), a KEi payload is included as well.  If no PFS was negotiated
+   for the Child SA being rekeyed, a KEi payload is not included.  If
+   the Child SA being rekeyed was created with IP compression, then
+   IPCOMP_SUPPORTED notifications MUST be sent as they contain the
+   required updated Compression Parameter Indexes (CPIs).
 
    The responder of an optimized rekey request performs the same
    process.  It includes the OPTIMIZED_REKEY notify with its new SPI for
    the new Child SA and omits the SA and TS payloads.  Depending on the
-   PFS negotiation of the Child SA being rekeyed, the responder includes
-   a KEr payload.
+   PFS and IP compression negotiation of the Child SA being rekeyed, the
+   responder correspondingly includes a KEr payload and/or the
+   IPCOMP_SUPPORTED Notify payload.
 
    Both parties send their nonce payloads just as they would do for a
    regular Child SA rekey.
@@ -310,16 +308,12 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
    respectively from the initiator and responder's OPTIMIZED_REKEY
    payloads, both parties can perform the Child SA rekey operation.
 
-   Notify payloads that can affect the Child SA properties, such as
+   Except for the key and identification information such as the SPI and
+   CPI, all other properties of the Child SA being rekeyed MUST be
+   inherited to the one newly created by the optimized rekey.  Notify
+   payloads that can affect these properties, such as
    USE_TRANSPORT_MODE, ESP_TFC_PADDING_NOT_SUPPORTED, ROHC_SUPPORTED
-   [RFC5857] or USE_AGGFRAG [RFC9347] MUST NOT be sent.  The responder
-   MUST fail the rekey and reply error if it receives these
-   notifications in the optimized rekey request.  All the properties
-   (except the key) of the Child SA being rekeyed MUST be inherited to
-   the one newly created by the optimized rekey.  If the Child SA being
-   rekeyed was created with IP compression, then IPCOMP_SUPPORTED
-   notifications MUST be sent as they contain the required updated
-   Compression Parameter Indexes (CPIs).
+   [RFC5857] or USE_AGGFRAG [RFC9347] MUST NOT be sent.
 
    The CREATE_CHILD_SA message exchange in this case is shown below:
 
@@ -330,20 +324,20 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
                                <-- HDR, SK {N(OPTIMIZED_REKEY,newSPIr),
                                             Nr, [KEr,]}
 
-
-
-
-Kampati, et al.           Expires 24 July 2025                  [Page 6]
-
-Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
-
-
    For the Child SA that was negotiated as part of an initial IKE
    exchange (e.g., IKE_AUTH), its parameters for PFS and the KE method
    is not known to each other peer at the time of its creation.  Two
    peers MUST have the same configurations for the PFS and KE method.
    If rekeying without PFS is required, the peer initiates the optimized
    rekey request without KEi payload.  If rekeying with PFS is required
+
+
+
+Kampati, et al.           Expires 28 July 2025                  [Page 6]
+
+Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
+
+
    and the KE method for the Child SA is the same as the one for IKE SA,
    the peer initiates the optimized rekey request with a KEi payload.
    The responder correspondingly include a KEr payload or not in its
@@ -384,20 +378,21 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
    This Notify Message type contains no data.
 
-
-
-
-
-
-Kampati, et al.           Expires 24 July 2025                  [Page 7]
-
-Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
-
-
 6.2.  OPTIMIZED_REKEY Notify
 
    The OPTIMIZED_REKEY Notify Message type is used to perform an
    optimized IKE SA or Child SA rekey.
+
+
+
+
+
+
+
+Kampati, et al.           Expires 28 July 2025                  [Page 7]
+
+Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
+
 
     0                 1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -436,28 +431,24 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
    OPTIMIZED_REKEY_SUPPORTED                TBD1
    OPTIMIZED_REKEY                          TBD2
 
-
-
-
-
-
-
-
-
-
-Kampati, et al.           Expires 24 July 2025                  [Page 8]
-
-Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
-
-
 8.  Operational Considerations
 
    Some implementations allow sending rekey messages with a different
    set of Traffic Selectors or cryptographic parameters in response to a
    configuration update.  IKEv2 [RFC7296] states this "SHOULD NOT" be
-   done.  When there is a configuration change that changes the Traffic
-   Selectors, cryptographic parameters, or other properties of the SA,
-   the optimized rekey method MUST NOT be used.
+   done.  But if there is a configuration change that changes the
+   Traffic Selectors, cryptographic parameters, or other properties of
+   the SA, the regular rekey should be used to make the configuration
+   change active, since the optimized rekey can't express such changes.
+
+
+
+
+
+Kampati, et al.           Expires 28 July 2025                  [Page 8]
+
+Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
+
 
    Two peers' PFS policy and KE method configurations MUST be the same,
    otherwise, the rekey of the Child SA created in the IKE_AUTH exchange
@@ -499,19 +490,21 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
 11.2.  Informative References
 
-
-
-Kampati, et al.           Expires 24 July 2025                  [Page 9]
-
-Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
-
-
    [I-D.pwouters-ipsecme-child-pfs-info]
               Wouters, P., "IKEv2 support for Child SA PFS policy
               notification", Work in Progress, Internet-Draft, draft-
               pwouters-ipsecme-child-pfs-info-00, 3 March 2024,
               <https://datatracker.ietf.org/doc/html/draft-pwouters-
               ipsecme-child-pfs-info-00>.
+
+
+
+
+
+Kampati, et al.           Expires 28 July 2025                  [Page 9]
+
+Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
+
 
    [RFC5857]  Ertekin, E., Christou, C., Jasani, R., Kivinen, T., and C.
               Bormann, "IKEv2 Extensions to Support Robust Header
@@ -555,19 +548,20 @@ Authors' Addresses
    Email: bharath.meduri@mavenir.com
 
 
-
-
-Kampati, et al.           Expires 24 July 2025                 [Page 10]
-
-Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
-
-
    Meiling Chen
    China Mobile
    32 Xuanwumen West Street, West District
    Beijing
    100053
    China
+
+
+
+Kampati, et al.           Expires 28 July 2025                 [Page 10]
+
+Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
+
+
    Email: chenmeiling@chinamobile.com
 
 
@@ -613,4 +607,10 @@ Internet-Draft     Optimized Rekey of IKE & Child SAs       January 2025
 
 
 
-Kampati, et al.           Expires 24 July 2025                 [Page 11]
+
+
+
+
+
+
+Kampati, et al.           Expires 28 July 2025                 [Page 11]
