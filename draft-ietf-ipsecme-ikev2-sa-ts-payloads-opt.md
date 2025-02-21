@@ -254,7 +254,8 @@ The Notification Data for this notify contains new SPI. Its size depends on the 
 
 ## IKE Session Resumption
 
-IKE Session Resumption [RFC5723] defines an IKEv2 extension, taht allows peers to quickly restore IKE SA when it is for some reason deleted. When used with optimized rekey, the following rules apply.
+IKE Session Resumption [RFC5723] defines an IKEv2 extension, that allows peers to quickly restore IKE SA when it is for some reason deleted. When used with optimized rekey, the following rules apply.
+
 
 * Support for optimized rekeys MUST be re-negotiated during the resumption (in the IKE_AUTH exchange).
 
