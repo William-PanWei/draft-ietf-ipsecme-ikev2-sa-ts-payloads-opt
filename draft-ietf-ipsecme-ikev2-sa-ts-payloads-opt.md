@@ -249,7 +249,8 @@ The Notification Data for this notify contains new SPI. Its size depends on the 
 
 ## Multiple Key Exchanges
 
-[RFC9370] defines the use of multiple key exchange methods for the purpose of IKE SA and Child SA establishment in IKEv2. If multiple exchange methods are used for an SA, then optimized rekey of this SA MUST use the same key exchange methods. It means that the CREATE_CHILD_SA will be followed by some IKE_FOLLOWUP_KE exchanges and the numbrer of these exchanges will be determined by the number of additional key exchange methods used for the SA being rekeyed.
+[RFC9370] defines the use of multiple key exchange methods for the purpose of IKE SA and Child SA establishment in IKEv2. If multiple key exchange methods are used for an SA, then optimized rekey of this SA MUST use the same key exchange methods. It means that the CREATE_CHILD_SA will be followed by some IKE_FOLLOWUP_KE exchanges and the number of these exchanges will be determined by the number of additional key exchange methods used for the SA being rekeyed.
+
 
 ## IKE Session Resumption
 
