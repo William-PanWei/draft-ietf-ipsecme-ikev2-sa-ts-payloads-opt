@@ -72,6 +72,8 @@ normative:
   RFC2119:
   RFC8174:
   RFC7296:
+  RFC5723:
+  RFC9370:
 
 informative:
   RFC5857:
@@ -242,6 +244,24 @@ The OPTIMIZED_REKEY Notify Message type is used to perform an optimized IKE SA o
 * Notify Message Type (2 octets) - MUST be set to the value `TBD2`.
 
 The Notification Data for this notify contains new SPI. Its size depends on the type of SA being rekeyed. In case of IKE SA it MUST be 8 octets. In case of Child SA it MUST be equal to the SPI Size field in the REKEY_SA notification that identifies the SA being rekeyed.
+
+# Interaction with IKEv2 Extensions
+
+## Multiple Key Exchanges
+
+[RFC9370] defines the use of multiple key exchange methods for the purpose of IKE SA and Child SA establishment in IKEv2. If multiple key exchange methods are used for an SA, then optimized rekey of this SA MUST use the same key exchange methods. It means that the CREATE_CHILD_SA will be followed by some IKE_FOLLOWUP_KE exchanges and the number of these exchanges will be determined by the number of additional key exchange methods used for the SA being rekeyed.
+
+
+## IKE Session Resumption
+
+IKE Session Resumption [RFC5723] defines an IKEv2 extension, that allows peers to quickly restore IKE SA when it is for some reason deleted. When used with optimized rekey, the following rules apply.
+
+
+* Support for optimized rekeys MUST be re-negotiated during the resumption (in the IKE_AUTH exchange).
+
+* If support for optimized rekey is negotiated during resumption, then all IKE SA algorithms, including key exchange methods, are taken from the resumption ticket (i.e., from the SA being resumed), since they are not negotiated in the IKE_SA_RESUME exchange.
+
+* The initial Child SA created during the resumption is considered as been created with key exchange methods for the IKE SA, that were stored in the resumption ticket. This is despite the fact, that during the resumption no key exhanges (e.g., Diffie-Hellman) take place, the session keys are derived from the keys stored in the resumption ticket.
 
 # IANA Considerations
 
