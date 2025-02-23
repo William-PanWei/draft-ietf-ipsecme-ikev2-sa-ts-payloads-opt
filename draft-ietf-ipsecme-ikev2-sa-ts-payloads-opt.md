@@ -1,3 +1,4 @@
+---
 title: Optimized Rekeys in the Internet Key Exchange Protocol Version 2 (IKEv2)
 abbrev: Optimized Rekey of IKE & Child SAs
 docname: draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-04
@@ -191,11 +192,16 @@ HDR, SK {N(REKEY_SA,oldSPI), N(OPTIMIZED_REKEY,newSPIi),
                                          Nr, [KEr,]}
 ~~~~
 
-For the Child SA that was negotiated as part of an initial IKE exchange (e.g., IKE_AUTH), its parameters for PFS and the KE method is not known to each other peer at the time of its creation. Two peers MUST have the same configurations for the PFS and KE method. 
-If rekeying without PFS is required, the peer initiates the optimized rekey request without KEi payload. If rekeying with PFS is required and the KE method for the Child SA is the same as the one for IKE SA, the peer initiates the optimized rekey request with a KEi payload. The responder correspondingly include a KEr payload or not in its optimized rekey response.
-If the KE method for the Child SA is different with the one for IKE SA, the peer first initiates a regular Child SA rekey with KE payload, and subsequently it can use the optimized rekey method. If a peer responding to an optimized rekey receives a request with a non-allowed PFS proposal, it MUST return an INVALID_KE_PAYLOAD response.
+For the initial Child SA that was negotiated as part of an initial IKE exchange (e.g., IKE_AUTH), at the time of its creation the parameters of PFS and KE method for Child SAs are not negotiated. Therefore, the KE method for the initial IKE SA should also be recognized as the one for this initial Child SA.
 
-If the responder fails processing the optimized rekey request, e.g., receiving a request with a non-allowed PFS proposal, it MUST return an error message (What error type?). After receiving the error response of the optimized rekey, the initiator can retry a regular rekey.
+Two peers must have the same configurations for the parameters of PFS and KE method for Child SAs.
+
+If rekeying without PFS is required, the peer initiates the optimized rekey request without a KEi payload.
+If rekeying with PFS is required and the configured KE method for Child SAs is the same as the one used by the Child SA being rekeyed, the peer initiates the optimized rekey request with a KEi payload. The responder correspondingly includes a KEr payload or not in its optimized rekey response.
+
+If the configured KE method for Child SAs is different from the one used by the Child SA being rekeyed, this situation can be seen as there is a configuration change, thus the regular rekey should be used instead of the optimized rekey.
+
+If the responder fails to process the optimized rekey request, e.g., receiving a request with a non-allowed PFS proposal, it MUST return an error as the notification of type NO_PROPOSAL_CHOSEN. After receiving the error response of the optimized rekey, the initiator can retry a regular rekey.
 
 # Payload Formats
 
@@ -289,4 +295,3 @@ The optimized rekey removes sending unnecessary new parameters that originally w
 Special thanks go to Antony Antony and Tobias Brunner.
 
 --- back
-
