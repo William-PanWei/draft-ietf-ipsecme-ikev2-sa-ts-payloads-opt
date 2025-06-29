@@ -1,7 +1,7 @@
 ---
 title: Optimized Rekeys in the Internet Key Exchange Protocol Version 2 (IKEv2)
 abbrev: Optimized Rekey of IKE & Child SAs
-docname: draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-04
+docname: draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-05
 category: std
 
 ipr: trust200902
@@ -75,6 +75,7 @@ normative:
   RFC7296:
   RFC5723:
   RFC9370:
+  I-D.ietf-ipsecme-ikev2-qr-alt: qr-alt
 
 informative:
   RFC5857:
@@ -179,7 +180,7 @@ Both parties send their nonce payloads just as they would do for a regular Child
 
 Using the old SPI from the REKEY_SA payload and the two new SPIs respectively from the initiator and responder's OPTIMIZED_REKEY payloads, both parties can perform the Child SA rekey operation.
 
-Except for the key and identification information such as the SPI and CPI, all other properties of the Child SA being rekeyed MUST be inherited to the one newly created by the optimized rekey. Notify payloads that can affect these properties, such as USE_TRANSPORT_MODE, ESP_TFC_PADDING_NOT_SUPPORTED, ROHC_SUPPORTED [RFC5857] or USE_AGGFRAG [RFC9347] MUST NOT be sent.
+Except for the key and identification information such as the SPI and CPI, all other properties of the Child SA being rekeyed MUST be inherited to the one newly created by the optimized rekey. Notify payloads that can affect these properties, such as USE_TRANSPORT_MODE, ESP_TFC_PADDING_NOT_SUPPORTED, ROHC_SUPPORTED [RFC5857] or USE_AGGFRAG [RFC9347] MUST NOT be sent. In contrast, the Post-quantum Preshared Keys (PPKs) defined in {{-qr-alt}} can be considered as part of the key information since they are used in the session keys calculations, therefore, the PPKs negotiation MUST be included in the optimized Child SA rekey if {{-qr-alt}} are used.
 
 The CREATE_CHILD_SA message exchange in this case is shown below:
 
@@ -267,7 +268,12 @@ IKE Session Resumption [RFC5723] defines an IKEv2 extension, that allows peers t
 
 * If support for optimized rekey is negotiated during resumption, then all IKE SA algorithms, including key exchange methods, are taken from the resumption ticket (i.e., from the SA being resumed), since they are not negotiated in the IKE_SA_RESUME exchange.
 
-* The initial Child SA created during the resumption is considered as been created with key exchange methods for the IKE SA, that were stored in the resumption ticket. This is despite the fact, that during the resumption no key exhanges (e.g., Diffie-Hellman) take place, the session keys are derived from the keys stored in the resumption ticket.
+* The initial Child SA created during the resumption is considered as been created with key exchange methods for the IKE SA, that were stored in the resumption ticket. This is despite the fact, that during the resumption no key exchanges (e.g., Diffie-Hellman) take place, the session keys are derived from the keys stored in the resumption ticket.
+
+
+## Mixing Preshared Keys in the CREATE_CHILD_SA Exchanges
+
+{{-qr-alt}} defines how PPKs can be mixed into the session keys calculations. In particular, this document allows PPKs to be used in the CREATE_CHILD_SA exchanges when SAs are being rekeyed. If peers support {{-qr-alt}}, then, in case of optimized rekey, they MUST NOT omit negotiation of the use of PPKs in the CREATE_CHILD_SA exchange.
 
 # IANA Considerations
 
