@@ -180,7 +180,8 @@ Both parties send their nonce payloads just as they would do for a regular Child
 
 Using the old SPI from the REKEY_SA payload and the two new SPIs respectively from the initiator and responder's OPTIMIZED_REKEY payloads, both parties can perform the Child SA rekey operation.
 
-Except for the key and identification information such as the SPI and CPI, all other properties of the Child SA being rekeyed MUST be inherited to the one newly created by the optimized rekey. Notify payloads that can affect these properties, such as USE_TRANSPORT_MODE, ESP_TFC_PADDING_NOT_SUPPORTED, ROHC_SUPPORTED [RFC5857] or USE_AGGFRAG [RFC9347] MUST NOT be sent. In contrast, the Post-quantum Preshared Keys (PPKs) defined in {{-qr-alt}} can be considered as part of the key information since they are used in the session keys calculations, therefore, the PPKs negotiation MUST be included in the optimized Child SA rekey if {{-qr-alt}} are used.
+Except for the key and identification information such as the SPI and CPI, all other properties of the Child SA being rekeyed MUST be inherited to the one newly created by the optimized rekey. Notify payloads that can affect these properties, such as USE_TRANSPORT_MODE, ESP_TFC_PADDING_NOT_SUPPORTED, ROHC_SUPPORTED [RFC5857] or USE_AGGFRAG [RFC9347] MUST NOT be sent.
+In contrast, the Post-quantum Preshared Keys (PPKs) defined in {{-qr-alt}} can be considered as part of the key information since they are used in the session keys calculations, therefore, the PPKs negotiation MUST be included in the optimized Child SA rekey if {{-qr-alt}} are used.
 
 The CREATE_CHILD_SA message exchange in this case is shown below:
 
