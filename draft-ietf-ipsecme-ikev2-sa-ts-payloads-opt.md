@@ -273,7 +273,8 @@ IKE Session Resumption [RFC5723] defines an IKEv2 extension, that allows peers t
 
 ## Mixing Preshared Keys in the CREATE_CHILD_SA Exchanges
 
-{{-qr-alt}} defines how PPKs can be mixed into the session keys calculations. In particular, this document allows PPKs to be used in the CREATE_CHILD_SA exchanges when SAs are being rekeyed. If peers support {{-qr-alt}}, then, in case of optimized rekey, they MUST NOT omit negotiation of the use of PPKs in the CREATE_CHILD_SA exchange.
+{{-qr-alt}} defines how PPKs can be mixed into the session keys calculations. In particular, this document allows PPKs to be used in the CREATE_CHILD_SA exchanges when SAs are being rekeyed.
+If peers support {{-qr-alt}} and a PPK was used for the SA being rekeyed, then they MUST NOT silently re-use this PPK in case of optimized rekey and MUST re-negotiate the use of PPKs in the CREATE_CHILD_SA exchange.
 
 # IANA Considerations
 
