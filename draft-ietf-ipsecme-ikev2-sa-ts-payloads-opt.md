@@ -194,7 +194,7 @@ HDR, SK {N(REKEY_SA,oldSPI), N(OPTIMIZED_REKEY,newSPIi),
                                          Nr, [KEr,]}
 ~~~~
 
-If a responder fails to process the optimized rekey request, e.g., there is a change of the configuration, it MUST return an error as the notification of type NO_PROPOSAL_CHOSEN. After receiving the error response of the optimized rekey, the initiator can retry a regular rekey.
+If a responder fails to process the optimized rekey request because for some reasons it cannot re-use SA parameters for the SA being rekeyed (e.g., there is a change in the responder's configuration), it MUST return an error as the notification of type NO_PROPOSAL_CHOSEN. After receiving the error response of the optimized rekey, the initiator can retry a regular rekey.
 
 ## Optimized Rekey of the Initial Child SA
 
@@ -202,7 +202,7 @@ For the initial Child SA that was negotiated as part of an initial IKE exchange 
 However, {{-child-pfs}} provides a mechanism to negotiate these parameters during the creation of the initial Child SA.
 
 If both peers support and use {{-child-pfs}}, the PFS policy and KE method(s) for the initial Child SA is known during its creation.
-Therefore, when rekeying the initial Child SA for the first time, the optimized way SHOULD be used.
+Therefore, in this situation, when rekeying the initial Child SA for the first time, the optimized way SHOULD be used.
 If {{-child-pfs}} is not supported or used, a regular rekey MUST be used for the first time to negotiate these parameters. Then, the next rekey can use the optimized way.
 
 # Payload Formats
@@ -292,7 +292,7 @@ OPTIMIZED_REKEY                          TBD2
 
 Some implementations allow sending rekey messages with a different set of Traffic Selectors or cryptographic parameters in response to a configuration update. IKEv2 [RFC7296] states this "SHOULD NOT" be done. But if there is a configuration change that changes the Traffic Selectors, cryptographic parameters, or other properties of the SA, the regular rekey should be used to make the configuration change active, since the optimized rekey can't express such changes.
 
-Two peers' PFS policy and KE method configurations MUST be the same, otherwise, the rekey (regardless of regular or optimized way) of the initial Child SA created in the IKE_AUTH exchange would fail. This issue is also discussed in detail in {{-child-pfs}}. 
+Two peers MUST have the same PFS policy and contain mutally acceptable KE method(s), otherwise, the rekey (regardless of regular or optimized way) of the initial Child SA created in the IKE_AUTH exchange would fail. This issue is also discussed in detail in {{-child-pfs}}. 
 
 # Security Considerations
 
