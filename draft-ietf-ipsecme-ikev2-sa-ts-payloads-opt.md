@@ -76,11 +76,11 @@ normative:
   RFC5723:
   RFC9370:
   I-D.ietf-ipsecme-ikev2-qr-alt: qr-alt
+  I-D.pwouters-ipsecme-child-pfs-info: child-pfs
 
 informative:
   RFC5857:
   RFC9347:
-  I-D.pwouters-ipsecme-child-pfs-info: child-pfs
 
 venue:
   mail: ipsec@ietf.org
@@ -194,16 +194,16 @@ HDR, SK {N(REKEY_SA,oldSPI), N(OPTIMIZED_REKEY,newSPIi),
                                          Nr, [KEr,]}
 ~~~~
 
-For the initial Child SA that was negotiated as part of an initial IKE exchange (e.g., IKE_AUTH), at the time of its creation the parameters of PFS and KE method for Child SAs are not negotiated. Therefore, the KE method for the initial IKE SA should also be recognized as the one for this initial Child SA.
+If a responder fails to process the optimized rekey request because for some reasons it cannot re-use SA parameters for the SA being rekeyed (e.g., there is a change in the responder's configuration), it MUST return an error as the notification of type NO_PROPOSAL_CHOSEN. After receiving the error response of the optimized rekey, the initiator can retry a regular rekey.
 
-Two peers must have the same configurations for the parameters of PFS and KE method for Child SAs.
+## Optimized Rekey of the Initial Child SA
 
-If rekeying without PFS is required, the peer initiates the optimized rekey request without a KEi payload.
-If rekeying with PFS is required and the configured KE method for Child SAs is the same as the one used by the Child SA being rekeyed, the peer initiates the optimized rekey request with a KEi payload. The responder correspondingly includes a KEr payload or not in its optimized rekey response.
+For the initial Child SA that was negotiated as part of an initial IKE exchange (e.g., IKE_AUTH), at the time of its creation the parameters of PFS and KE method(s) for Child SAs are not negotiated.
+However, {{-child-pfs}} provides a mechanism to negotiate these parameters during the creation of the initial Child SA.
 
-If the configured KE method for Child SAs is different from the one used by the Child SA being rekeyed, this situation can be seen as there is a configuration change, thus the regular rekey should be used instead of the optimized rekey.
-
-If the responder fails to process the optimized rekey request, e.g., receiving a request with a non-allowed PFS proposal, it MUST return an error as the notification of type NO_PROPOSAL_CHOSEN. After receiving the error response of the optimized rekey, the initiator can retry a regular rekey.
+If both peers support and use {{-child-pfs}}, the PFS policy and KE method(s) for the initial Child SA is known during its creation.
+Therefore, in this situation, when rekeying the initial Child SA for the first time, the optimized way SHOULD be used.
+If {{-child-pfs}} is not supported or used, a regular rekey MUST be used for the first time to negotiate these parameters. Then, the next rekey can use the optimized way.
 
 # Payload Formats
 
@@ -292,7 +292,7 @@ OPTIMIZED_REKEY                          TBD2
 
 Some implementations allow sending rekey messages with a different set of Traffic Selectors or cryptographic parameters in response to a configuration update. IKEv2 [RFC7296] states this "SHOULD NOT" be done. But if there is a configuration change that changes the Traffic Selectors, cryptographic parameters, or other properties of the SA, the regular rekey should be used to make the configuration change active, since the optimized rekey can't express such changes.
 
-Two peers' PFS policy and KE method configurations MUST be the same, otherwise, the rekey of the Child SA created in the IKE_AUTH exchange would fail. This issue is also discussed in detail in {{-child-pfs}}. If the KE method for Child SAs is negotiated during the creation of the initial Child SA via the mechanism like {{-child-pfs}}, this KE method MUST be inherited when using the optimized method to rekey the initial Child SA.
+Two peers MUST have the same PFS policy and contain mutally acceptable KE method(s), otherwise, the rekey (regardless of regular or optimized way) of the initial Child SA created in the IKE_AUTH exchange would fail. This issue is also discussed in detail in {{-child-pfs}}. 
 
 # Security Considerations
 
