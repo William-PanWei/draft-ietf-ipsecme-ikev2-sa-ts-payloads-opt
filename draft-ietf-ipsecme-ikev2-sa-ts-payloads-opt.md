@@ -1,7 +1,7 @@
 ---
 title: Optimized Rekeys in the Internet Key Exchange Protocol Version 2 (IKEv2)
 abbrev: Optimized Rekey of IKE & Child SAs
-docname: draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-05
+docname: draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-06
 category: std
 
 ipr: trust200902
@@ -75,7 +75,7 @@ normative:
   RFC7296:
   RFC5723:
   RFC9370:
-  I-D.ietf-ipsecme-ikev2-qr-alt: qr-alt
+  RFC9867:
   I-D.pwouters-ipsecme-child-pfs-info: child-pfs
 
 informative:
@@ -181,7 +181,7 @@ Both parties send their nonce payloads just as they would do for a regular Child
 Using the old SPI from the REKEY_SA payload and the two new SPIs respectively from the initiator and responder's OPTIMIZED_REKEY payloads, both parties can perform the Child SA rekey operation.
 
 Except for the key and identification information such as the SPI and CPI, all other properties of the Child SA being rekeyed MUST be inherited to the one newly created by the optimized rekey. Notify payloads that can affect these properties, such as USE_TRANSPORT_MODE, ESP_TFC_PADDING_NOT_SUPPORTED, ROHC_SUPPORTED [RFC5857] or USE_AGGFRAG [RFC9347] MUST NOT be sent.
-In contrast, the Post-quantum Preshared Keys (PPKs) defined in {{-qr-alt}} can be considered as part of the key information since they are used in the session keys calculations, therefore, the PPKs negotiation MUST be included in the optimized Child SA rekey if {{-qr-alt}} are used.
+In contrast, the Post-quantum Preshared Keys (PPKs) defined in [RFC9867] can be considered as part of the key information since they are used in the session keys calculations, therefore, the PPKs negotiation MUST be included in the optimized Child SA rekey if [RFC9867] are used.
 
 The CREATE_CHILD_SA message exchange in this case is shown below:
 
@@ -274,8 +274,8 @@ IKE Session Resumption [RFC5723] defines an IKEv2 extension, that allows peers t
 
 ## Mixing Preshared Keys in the CREATE_CHILD_SA Exchanges
 
-{{-qr-alt}} defines how PPKs can be mixed into the session keys calculations. In particular, this document allows PPKs to be used in the CREATE_CHILD_SA exchanges when SAs are being rekeyed.
-If peers support {{-qr-alt}} and a PPK was used for the SA being rekeyed, then they MUST NOT silently re-use this PPK in case of optimized rekey and MUST re-negotiate the use of PPKs in the CREATE_CHILD_SA exchange.
+[RFC9867] defines how PPKs can be mixed into the session keys calculations. In particular, this document allows PPKs to be used in the CREATE_CHILD_SA exchanges when SAs are being rekeyed.
+If peers support [RFC9867] and a PPK was used for the SA being rekeyed, then they MUST NOT silently re-use this PPK in case of optimized rekey and MUST re-negotiate the use of PPKs in the CREATE_CHILD_SA exchange.
 
 # IANA Considerations
 
@@ -303,3 +303,4 @@ The optimized rekey removes sending unnecessary new parameters that originally w
 Special thanks go to Antony Antony and Tobias Brunner.
 
 --- back
+
