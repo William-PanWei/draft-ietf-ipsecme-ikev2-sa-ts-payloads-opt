@@ -143,6 +143,10 @@ The regular rekey can be retried when the optimized rekey fails.
 Note that, except for the key and identification information such as the SPI, the optimized rekey MUST inherit all other properties of the SA being rekeyed.
 This means the configurations related to the SA being rekeyed are supposed to have no changes.
 If there is a change to the configurations, the regular rekey MUST be used instead.
+If the configuration change occured on an initiator of the rekey, it just starts the regular rekey instead of the optimized rekey.
+
+If a responder fails to process the optimized rekey request for any reason (e.g., there is a change in the responder's configuration or optimized rekey is administratively prohibited or the initiator tries to use the optimized rekey for initial Child SA when KE methods are not yet determined, see {{initial}}), it MUST return an error notification of type NO_PROPOSAL_CHOSEN. After receiving the error response of the optimized rekey, the initiator can retry the regular rekey.
+
 After the regular rekey, the next rekey can use the optimized way if there is no change to the configuration.
 
 # Optimized Rekey of IKE SA
@@ -194,9 +198,7 @@ HDR, SK {N(REKEY_SA,oldSPI), N(OPTIMIZED_REKEY,newSPIi),
                                          Nr, [KEr,]}
 ~~~~
 
-If a responder fails to process the optimized rekey request because for some reasons it cannot re-use SA parameters for the SA being rekeyed (e.g., there is a change in the responder's configuration), it MUST return an error as the notification of type NO_PROPOSAL_CHOSEN. After receiving the error response of the optimized rekey, the initiator can retry a regular rekey.
-
-## Optimized Rekey of the Initial Child SA
+## Optimized Rekey of the Initial Child SA {#initial}
 
 For the initial Child SA that was negotiated as part of an initial IKE exchange (e.g., IKE_AUTH), at the time of its creation the parameters of PFS and KE method(s) for Child SAs are not negotiated.
 However, {{-child-pfs}} provides a mechanism to negotiate these parameters during the creation of the initial Child SA.
@@ -303,4 +305,5 @@ The optimized rekey removes sending unnecessary new parameters that originally w
 Special thanks go to Antony Antony and Tobias Brunner.
 
 --- back
+
 
