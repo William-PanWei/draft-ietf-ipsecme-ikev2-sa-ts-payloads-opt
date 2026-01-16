@@ -1,7 +1,7 @@
 ---
 title: Optimized Rekeys in the Internet Key Exchange Protocol Version 2 (IKEv2)
 abbrev: Optimized Rekey of IKE & Child SAs
-docname: draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-06
+docname: draft-ietf-ipsecme-ikev2-sa-ts-payloads-opt-07
 category: std
 
 ipr: trust200902
@@ -305,5 +305,6 @@ The optimized rekey removes sending unnecessary new parameters that originally w
 Special thanks go to Antony Antony and Tobias Brunner.
 
 --- back
+
 
 
